@@ -2,48 +2,85 @@ package cxml
 
 import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
+import scala.collection.immutable.TreeMap
 import scala.xml._
 
 class CompareXmlSpec extends FlatSpec with ShouldMatchers {
 
-  "Hello" should "have tests" in {
-    //<test/> should be === <test/>
-    //val x = <test/>
-    //x.child
-    //XmlComparator.compare(<actual/>, <expected/>)
+  "CompareXml" should "sort taking into account child nodes" in {
+    val xml1 =
+      <root>
+        <x/>
+        <x>
+          <abc/>
+        </x>
+        <x/>
+      </root>
 
-    var xml =
+    val xml2 =
+      <root>
+        <x>
+          <abc/>
+        </x>
+        <x/>
+        <x/>
+      </root>
+
+    xml1 shouldNot be === xml2
+    XmlComparator.compare(xml1, xml2) should be === true
+  }
+
+  "CompareXml" should "sort attributes" in {
+    val xml1 =
+      <root>
+        <x id="1"/>
+        <x id="2"/>
+        <x id="3"/>
+      </root>
+
+    val xml2 =
+      <root>
+        <x id="2"/>
+        <x id="1"/>
+        <x id="3"/>
+      </root>
+
+    xml1 shouldNot be === xml2
+    XmlComparator.compare(xml1, xml2) should be === true
+  }
+
+  "CompareXml" should "work on mid-size sample" in {
+
+    var xml1 =
       <root>
         <level-1 id="id" name="Hello, World">
-          <abc/>
           <def/>
+          <abc/>
+          <level-2 id="id2" description="Goodbye, cruel World.">
+            <xyz/>
+            <allo/>
+          </level-2>
+          <level-2/>
+          <level-2 id="id2" description="Goodbye, cruel World."/>
         </level-1>
       </root>
 
-    println(xml)
-    println(sort(xml))
+    var xml2 =
+      <root>
+        <level-1 id="id" name="Hello, World">
+          <def/>
+          <abc/>
+          <level-2/>
+          <level-2 id="id2" description="Goodbye, cruel World."/>
+          <level-2 id="id2" description="Goodbye, cruel World.">
+            <xyz/>
+            <allo/>
+          </level-2>
+        </level-1>
+      </root>
 
-    <test/> should be === <test/>
+    xml1 shouldNot be === xml2
+    XmlComparator.compare(xml1, xml2) should be === true
   }
 
-  private def sort(node: Node): Node = node match {
-    case elem: Elem => elem.copy(child = elem.child.map(sort).sorted)
-    case _ => node
-  }
-
-  implicit val nodes = new Ordering[Node] {
-    override def compare(x: Node, y: Node): Int = (x, y) match {
-      case (x1: Elem, y1: Elem) => elem.compare(x1, y1)
-      case (x1: Text, y1: Text) => x1.text.compare(y1.text)
-      case (x1, y1) => (x1.getClass.getName + ":" + x1).compare(y1.getClass.getName + ":" + y1)
-    }
-  }
-
-  implicit val elem = new Ordering[Elem] {
-    override def compare(x: Elem, y: Elem): Int = {
-      //      Ordering.`
-      ???
-      //        this(prefix, label, attributes, scope, child.isEmpty, child: _*)
-    }
-  }
 }
